@@ -6,6 +6,7 @@ namespace app\controllers;
 use app\models\Post;
 use app\models\PostView;
 use app\models\UpdatePostView;
+use app\models\User;
 use app\services\CreatePostService;
 use app\services\UpdatePostService;
 use yii\filters\auth\HttpBearerAuth;
@@ -104,5 +105,16 @@ class PostController extends Controller
         ];
 
 
+    }
+
+    public function actionGetPost()
+    {
+        $token = preg_replace("/^(.*?)(\s)(.*?)$/", '\\3', \Yii::$app->request->headers->get('Authorization'));
+        $user = User::findIdentityByAccessToken($token);
+        $post = Post::find()
+            ->where(['user_id'=>$user->id])
+            ->all();
+        \Yii::$app->response->format = Response::FORMAT_JSON;
+        return $post;
     }
 }
