@@ -2,14 +2,13 @@
 
 namespace app\services;
 
-use app\models\RegistrationView;
+use app\models\RegistrationForm;
 use app\models\User;
-use yii\helpers\VarDumper;
 
 class CreateUserService
 {
 
-    public function saveUser(RegistrationView $user)
+    public function saveUser(RegistrationForm $user)
     {
         $model = new User();
         $model->login = $user->login;
@@ -17,8 +16,9 @@ class CreateUserService
         $model->setPassword($user->password);
         $model->save();
 
-        return $model;
+        return [
+            'model' => $model,
+            'errors' => $model->errors
+        ];
     }
-
-
 }

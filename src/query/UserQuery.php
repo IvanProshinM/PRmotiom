@@ -2,12 +2,8 @@
 
 namespace app\query;
 
-use app\models\User;
-
-
 class UserQuery extends \yii\db\ActiveQuery
 {
-
 
     /**
      * {@inheritdoc}

@@ -2,8 +2,6 @@
 
 namespace app\query;
 
-use app\models\Post;
-
 
 class PostQuery extends \yii\db\ActiveQuery
 {
@@ -27,5 +25,4 @@ class PostQuery extends \yii\db\ActiveQuery
     {
         return parent::one($db);
     }
-
 }

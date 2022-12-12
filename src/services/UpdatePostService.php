@@ -3,28 +3,29 @@
 namespace app\services;
 
 use app\models\Post;
-use app\models\PostView;
-use app\models\UpdatePostView;
+use app\models\UpdatePostForm;
+use Exception;
 
 class UpdatePostService
 {
-
-    public function updatePost(UpdatePostView  $post)
+    public function updatePost(UpdatePostForm $post)
     {
-
         $newPost = Post::find()
             ->where(['id' => $post->postId])
-            ->andWhere(['user_id'=>\Yii::$app->user->id])
+            ->andWhere(['user_id' => \Yii::$app->user->id])
             ->one();
         if (!$newPost) {
-            throw new \Exception('Пост таким id не найден');
+            throw new Exception('Пост таким id не найден');
         }
         $newPost->name = $post->postName;
         $newPost->postText = $post->postText;
-        $newPost->updatedAt = date('Y-m-d', time());
+        $newPost->updatedAt = date('Y-m-d');
 
         $newPost->save();
 
-        return $newPost;
+        return [
+            'model' => $newPost,
+            'errors' => $newPost->errors
+        ];
     }
 }

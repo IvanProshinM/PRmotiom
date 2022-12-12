@@ -7,15 +7,15 @@ use yii\db\ActiveRecord;
 use Yii;
 use yii\web\IdentityInterface;
 
+/**
+ * @property int $id
+ * @property string|null $login
+ * @property string|null $email
+ * @property string|null $password
+ * @property string|null $access_token
+ */
 class User extends ActiveRecord implements IdentityInterface
 {
-    /**
-     * @property int $id
-     * @property string|null $login
-     * @property string|null $email
-     * @property string|null $password
-     * @property string|null $access_token
-    */
 
     public static function tableName()
     {
@@ -44,7 +44,7 @@ class User extends ActiveRecord implements IdentityInterface
 
     public function validateAuthKey($authKey)
     {
-        return $this->authKey === $authKey;
+        return $this->access_token === $authKey;
     }
 
 
@@ -52,9 +52,10 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return static::findOne(['access_token' => $token]);
     }
+
     public function getAuthKey()
     {
-        return $this->authKey;
+        return $this->access_token;
     }
 
     /**
@@ -64,5 +65,4 @@ class User extends ActiveRecord implements IdentityInterface
     {
         return $this->id;
     }
-
 }

@@ -2,15 +2,13 @@
 
 namespace app\controllers;
 
-
 use app\models\Post;
-use app\models\PostView;
-use app\models\UpdatePostView;
-use app\models\User;
+use app\models\PostForm;
+use app\models\UpdatePostForm;
 use app\services\CreatePostService;
 use app\services\UpdatePostService;
+use Yii;
 use yii\filters\auth\HttpBearerAuth;
-use yii\helpers\VarDumper;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\AccessControl;
@@ -27,11 +25,11 @@ class PostController extends Controller
         ];
         $behaviors['access'] = [
             'class' => AccessControl::class,
-            'only' => ['create', 'update'],
+            'only' => ['create', 'update', 'view'],
             'rules' => [
                 [
                     'allow' => true,
-                    'actions' => ['create', 'update'],
+                    'actions' => ['create', 'update', 'view'],
                     'roles' => ['@'],
                 ],
             ],
@@ -41,24 +39,17 @@ class PostController extends Controller
 
     public $enableCsrfValidation = false;
 
-    /**
-     * @var CreatePostService
-     */
-    private $createPostService;
+    private CreatePostService $createPostService;
 
+    private UpdatePostService $updatePostService;
 
-    /**
-     * @var UpdatePostService
-     */
-    private $updatePostService;
-
-
-    public function __construct($id,
+    public function __construct(
+        $id,
         $module,
-                                CreatePostService $createPostService,
-                                UpdatePostService $updatePostService,
-        $config = [])
-    {
+        CreatePostService $createPostService,
+        UpdatePostService $updatePostService,
+        $config = []
+    ) {
         parent::__construct($id, $module, $config);
         $this->createPostService = $createPostService;
         $this->updatePostService = $updatePostService;
@@ -67,54 +58,55 @@ class PostController extends Controller
 
     public function actionCreate()
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $post = new PostForm();
 
-        $post = new PostView();
-
-
-        if ($post->load(\Yii::$app->request->post(), '') && $post->validate()) {
-
-
+        $post->load(Yii::$app->request->post(), '');
+        if ($post->validate()) {
             $newPost = $this->createPostService->createPost($post);
-            if ($newPost === null) {
-                throw new \Exception('Ошибка при создании поста');
-            }
-            \Yii::$app->response->format = Response::FORMAT_JSON;
 
             return [
-                'name' => $newPost->name,
-                'postText' => $newPost->postText,
+                'errors' => $newPost['errors'],
+                'data' => [
+                    'name' => $newPost['model']->name,
+                    'postText' => $newPost['model']->postText,
+                ]
             ];
         }
+        return [
+            'errors' => $post->errors
+        ];
     }
 
 
     public function actionUpdate()
     {
-        $model = new UpdatePostView();
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $model = new UpdatePostForm();
 
-
-        if ($model->load(\Yii::$app->request->post(), '') && $model->validate()) {
+        $model->load(Yii::$app->request->post(), '');
+        if ($model->validate()) {
             $newPost = $this->updatePostService->updatePost($model);
+            return [
+                'errors' => $newPost['errors'],
+                'data' => [
+                    'name' => $newPost['model']->name,
+                    'postText' => $newPost['model']->postText,
+                ]
+            ];
         }
 
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-
+        Yii::$app->response->forat = Response::FORMAT_JSON;
         return [
-            'name' => $newPost->name,
-            'postText' => $newPost->postText,
+            'errors' => $model->errors
         ];
-
-
     }
 
-    public function actionGetPost()
+    public function actionView()
     {
-        $token = preg_replace("/^(.*?)(\s)(.*?)$/", '\\3', \Yii::$app->request->headers->get('Authorization'));
-        $user = User::findIdentityByAccessToken($token);
-        $post = Post::find()
-            ->where(['user_id'=>$user->id])
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        return Post::find()
+            ->where(['user_id' => Yii::$app->user->id])
             ->all();
-        \Yii::$app->response->format = Response::FORMAT_JSON;
-        return $post;
     }
 }
